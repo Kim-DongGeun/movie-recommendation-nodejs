@@ -1,0 +1,43 @@
+.row {
+  margin-left: 20px;
+  color: white;
+}
+
+.row_posters {
+  display: flex;
+  /* 가로방향 */
+  overflow-y: scroll;
+  overflow-x: scroll;
+  /* 스크롤 만들기 */
+  padding: 20px;
+}
+
+.row_posters::-webkit-scrollbar {
+  display: none;
+  /* 스크롤 지우기 */
+}
+
+.row_poster {
+  object-fit: contain;
+  width: 100%;
+  max-height: 250px;
+  margin-right: 20px;
+  transition: transform 200ms;
+}
+
+.row_poster:hover {
+  transform: scale(1.1); /*마우스 댔을 때 효과 */
+}
+
+.row_posterLarge {
+  max-height: 300px;
+}
+
+.row_posterLarge:hover {
+  transform: scale(1.09);
+}
+
+.genre {
+  margin-left: 20px;
+  margin-top: 30px;
+}
