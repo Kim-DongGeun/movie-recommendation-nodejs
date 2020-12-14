@@ -3,6 +3,8 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var models = require('./models/index')
+var session = require('express-session')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -18,6 +20,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  key: 'sid',
+  secret:'secret',
+  resave: false,
+  saveUninitialized:true,
+  cookie:{
+    maxAge: 24000*60*60
+  }
+}))
+
+models.sequelize.sync().then(() => {
+  console.log("Connect DB");
+}).catch(err => {
+  console.log("Connect Failed DB");
+  console.log(err);
+})
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
