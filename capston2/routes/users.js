@@ -9,19 +9,38 @@ router.get('/signup', function(req, res, next){
 
 router.post('/signup', async function(req, res, next){
   let body = req.body;
+  let user = await models.users.findOne({
+    where:{
+      email: body.Email
+    }
+  });
+
+  if(user){
+    res.json({
+      message: '이메일이 중복되었습니다.',
+      duplicate: '1'
+    })
+  }
+  else{
+    let inputPassword = body.Password;
+    let salt = Math.round((new Date().valueOf() * Math.random())) + "";
+    let hashPassword = crypto.createHash("sha512").update(inputPassword + salt).digest("hex");
+    console.log(`salt ${salt}`);
+    console.log(`hash ${hashPassword}`);
   
-  let inputPassword = body.password;
-  let salt = Math.round((new Date().valueOf() * Math.random())) + "";
-  let hashPassword = crypto.createHash("sha512").update(inputPassword + salt).digest("hex");
+    models.users.create({
+        email: body.Email,
+        password: hashPassword,
+        salt: salt
+    })
 
-  let result = models.user.create({
-      name: body.userName,
-      email: body.userEmail,
-      password: hashPassword,
-      salt: salt
-  })
+    res.json({
+      message: '회원가입 성공!',
+      duplicate: '0'
+    })
+  }
 
-  res.redirect("signup");
+  //res.redirect("signup");
 })
 
 
@@ -41,30 +60,52 @@ router.get('/login', function(req, res, next){
 router.post('/login', async function(req, res, next){
   let body = req.body;
 
-  let result = await models.user.findOne({
+  let result = await models.users.findOne({
     where:{
-      email:body.userEmail
+      email:body.Email
     }
   })
 
-  let dbPassword = result.dataValues.password;
-  let inputPassword = body.password;
-  let salt = result.dataValues.salt;
-  let hashPassword = crypto.createHash("sha512").update(inputPassword + salt).digest("hex");
-
-  if(dbPassword === hashPassword){
-    console.log("비밀번호 일치");
-    req.session.email = body.userEmail;
-    /*res.cookie('users', body.userEamil, {
-      expires: new Date(Date.now() + 900000), // 유효시간
-      httpOnly: true
-    })*/
-    res.redirect('/users');
+  if(result === undefined){
+    res.json({
+      message: '존재하지 않는 계정입니다.'
+    })
   }
   else{
-    console.log("비밀번호 불일치");
-    res.redirect('login');
+    let dbPassword = result.dataValues.password;
+    let inputPassword = body.Password;
+    let salt = result.dataValues.salt;
+    let hashPassword = crypto.createHash("sha512").update(inputPassword + salt).digest("hex");
+    console.log(`salt  ${salt}`);
+    console.log(hashPassword);
+    console.log(dbPassword);
+    if(dbPassword === hashPassword){
+      console.log("비밀번호 일치");
+      req.session.email = body.userEmail;
+      /*res.cookie('users', body.userEamil, {
+        expires: new Date(Date.now() + 900000), // 유효시간
+        httpOnly: true
+      })*/
+      /*res.cookie('loginId', body.Email, {
+        expires: new Date(Date.now() + 900000), // 유효시간
+        httpOnly: true
+      });*/
+      res.json({
+        message: '로그인 되었습니다.',
+        login: '1'
+      });
+    }
+    else{
+      console.log("비밀번호 불일치");
+      res.json({
+        message: '비밀번호가 일치하지 않습니다.',
+        login: '0'
+      })
+    }
+
   }
+
+
 })
 
 router.get('/logout', function(req, res, next){
